@@ -1,6 +1,6 @@
 ############################################################################
 #
-#   Copyright (c) 2018 PX4 Development Team. All rights reserved.
+#   Copyright (c) 2015 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -29,64 +29,18 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-############################################################################
-
-px4_add_romfs_files(
-	AAERTWF.main.mix
-	AAVVTWFF.main.mix
-	AERT.main.mix
-	AETRFG.main.mix
-	bebop.main.mix
-	blade130.main.mix
-	caipi.main.mix
-	caipirinha_vtol.main.mix
-	CCPM.main.mix
-	claire.aux.mix
-	claire.main.mix
-	coax.main.mix
-	delta.main.mix
-	deltaquad.main.mix
-	dodeca_bottom_cox.aux.mix
-	dodeca_top_cox.main.mix
-	firefly6.aux.mix
-	firefly6.main.mix
-	FMU_pass.mix
-	fw_generic_wing.main.mix
-	FX79.main.mix
-	hexa_cox.main.mix
-	hexa_+.main.mix
-	hexa_x.main.mix
-	IO_pass.main.mix
-	king_air.aux.mix
-	king_air.main.mix
-	mount.aux.mix
-	mount_legs.aux.mix
-	ocpoc_quad_x.main.mix
-	octo_cox.main.mix
-	octo_cox_w.main.mix
-	octo_+.main.mix
-	octo_x.main.mix
-	pass.aux.mix
-	phantom.main.mix
-	quad_dc.main.mix
-	quad_h.main.mix
-	quad_+.main.mix
-	quad_s250aq.main.mix
-	quad_+_vtol.main.mix
-	quad_w.main.mix
-	quad_x_can.main.mix
-	quad_x.main.mix
-	quad_x_vtol.main.mix
-	quad_x_vtol_sim.main.mix
-	stampede.main.mix
-	tri_y_yaw-.main.mix
-	tri_y_yaw+.main.mix
-	ugv_generic.main.mix
-	Viper.main.mix
-	vtol_AAERT.aux.mix
-	vtol_AAVVT.aux.mix
-	vtol_convergence.main.mix
-	vtol_delta.aux.mix
-	wingwing.main.mix
-	zmr250.main.mix
-)
+#############################################################################
+px4_add_module(
+	MODULE modules__ekf2
+	MAIN ekf2
+	COMPILE_FLAGS
+		-Wno-sign-compare # TODO: fix all sign-compare
+	STACK_MAIN 2500
+	STACK_MAX 4000
+	SRCS
+		ekf2_main.cpp
+	DEPENDS
+		git_ecl
+		ecl_EKF
+		ecl_geo
+	)

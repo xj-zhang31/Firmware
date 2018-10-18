@@ -12,7 +12,7 @@ set(config_module_list
 	#drivers/magnetometer
 	#drivers/telemetry
 
-	#drivers/imu/adis16448
+	drivers/imu/adis16448
 	drivers/barometer/ms5611
 	#drivers/blinkm
 	#drivers/imu/bmi160
@@ -111,7 +111,7 @@ set(config_module_list
 	# Estimation modules
 	#
 	#modules/attitude_estimator_q
-	modules/ekf2
+	314-modules/ekf2
 	#modules/local_position_estimator
 	#modules/position_estimator_inav
 	#modules/landing_target_estimator

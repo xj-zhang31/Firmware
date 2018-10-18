@@ -127,6 +127,7 @@ set(msg_files
 	vehicle_rates_setpoint.msg
 	vehicle_roi.msg
 	vehicle_status.msg
+	vehicle_euler.msg
 	vehicle_status_flags.msg
 	vtol_vehicle_status.msg
 	wind_estimate.msg

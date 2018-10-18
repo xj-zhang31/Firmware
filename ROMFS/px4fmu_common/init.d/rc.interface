@@ -154,12 +154,12 @@ then
 	then
 		if fmu mode_${AUX_MODE} $FMU_ARGS
 		then
-			# Append aux mixer to main device
+			# Append aux mixer to main device, beacause the pwm_sim onlu consider main device
 			if param compare SYS_HITL 1
 			then
-				if mixer append ${OUTPUT_AUX_DEV} ${MIXER_AUX_FILE}
+				if mixer append ${OUTPUT_DEV} ${MIXER_AUX_FILE}
 				then
-					echo "INFO  [init] Mixer: ${MIXER_AUX_FILE} appended to ${OUTPUT_AUX_DEV}"
+					echo "INFO  [init] Mixer: ${MIXER_AUX_FILE} appended to ${OUTPUT_DEV}"
 				else
 					echo "ERROR  [init] Failed appending mixer: ${MIXER_AUX_FILE}"
 					echo "ERROR  [init] Failed appending mixer: ${MIXER_AUX_FILE}" >> $LOG_FILE

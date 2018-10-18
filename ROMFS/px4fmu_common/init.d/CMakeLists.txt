@@ -34,6 +34,7 @@
 px4_add_romfs_files(
 	1000_rc_fw_easystar.hil
 	1001_rc_quad_x.hil
+	1002_king_air_A90
 	2100_standard_plane
 	2105_maja
 	2106_albatross

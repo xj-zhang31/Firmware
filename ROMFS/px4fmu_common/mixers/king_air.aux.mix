@@ -1,0 +1,5 @@
+ gear mixer for PX4FMU ,HIL is for PX4io
+
+M: 1
+S: 3 7      10000  10000 0 -10000  10000
+
