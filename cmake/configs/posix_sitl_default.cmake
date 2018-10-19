@@ -43,15 +43,15 @@ set(config_module_list
 	#
 	# Testing
 	#
-	drivers/distance_sensor/sf0x/sf0x_tests
+	#drivers/distance_sensor/sf0x/sf0x_tests
 	#drivers/test_ppm
-	lib/rc/rc_tests
-	modules/commander/commander_tests
-	lib/controllib/controllib_test
-	modules/mavlink/mavlink_tests
-	modules/mc_pos_control/mc_pos_control_tests
-	modules/uORB/uORB_tests
-	systemcmds/tests
+	#lib/rc/rc_tests
+	#modules/commander/commander_tests
+	#lib/controllib/controllib_test
+	#modules/mavlink/mavlink_tests
+	#modules/mc_pos_control/mc_pos_control_tests
+	#modules/uORB/uORB_tests
+	#systemcmds/tests
 
 	platforms/posix/tests/hello
 	platforms/posix/tests/hrt_test
@@ -89,9 +89,8 @@ set(config_module_list
 	#modules/gnd_att_control
 	#modules/gnd_pos_control
 	modules/mc_att_control
-	314-modules/mc_pos_control
 	314-modules/vtol_att_control
-
+	314-modules/mc_pos_control
 	#
 	# Logging
 	#

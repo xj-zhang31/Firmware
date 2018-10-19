@@ -603,3 +603,36 @@ PARAM_DEFINE_FLOAT(MPC_TKO_RAMP_T, 0.4f);
  * @group Multicopter Position Control
  */
 PARAM_DEFINE_INT32(MPC_FLT_TSK, 0);
+/**
+ * Tailsitter position control smooth reset position after transition back from fix-wing mode
+ *
+ * Increasing this value will make reset time longer .
+ *
+ *
+ * @min 1
+ * @max 10
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_TRANS_KEEP, 2.0f);
+/**
+ * Tailsitter position control smooth reset altitude offset after transition back from fix-wing mode
+ *
+ * Increasing this value will make the offset altitude higher  .
+ *
+ *
+ * @min 1
+ * @max 20
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_TRANS_ALOF, 5.0f);
+/**
+ * Tailsitter position control min thrust setpoint after transition back from fix-wing mode
+ *
+ * .
+ *
+ *
+ * @min 0.2
+ * @max 1
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_WAST_MIN_THR, 0.4f);

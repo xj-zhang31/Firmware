@@ -76,7 +76,7 @@
 
 #include <controllib/blocks.hpp>
 
-#include <lib/314-lib/FlightTasks/FlightTasks.hpp>
+#include <lib/FlightTasks/FlightTasks.hpp>
 #include "PositionControl.hpp"
 #include "Utility/ControlMath.hpp"
 
@@ -229,10 +229,13 @@ private:
 		(ParamInt<px4::params::MPC_ALT_MODE>) _alt_mode,
 		(ParamFloat<px4::params::RC_FLT_CUTOFF>) _rc_flt_cutoff,
 		(ParamFloat<px4::params::RC_FLT_SMP_RATE>) _rc_flt_smp_rate,
-		(ParamFloat<px4::params::MPC_ACC_HOR_ESTM>) _acc_max_estimator_xy
+		(ParamFloat<px4::params::MPC_ACC_HOR_ESTM>) _acc_max_estimator_xy,
+		//xj-zhang
+		(ParamFloat<px4::params::MPC_TRANS_KEEP>) _time_keep_p,
+		(ParamFloat<px4::params::MPC_TRANS_ALOF>) _altitude_offset_p,
+		(ParamFloat<px4::params::MPC_WAST_MIN_THR>) _wastrans_min_thrust_p
 
 	);
-
 
 	control::BlockDerivative _vel_x_deriv;
 	control::BlockDerivative _vel_y_deriv;
@@ -309,10 +312,11 @@ private:
 
 	matrix::Dcmf _R_setpoint;
 	//xj-zhang keep altitude after transition
-		bool _was_in_transition{false};
-		hrt_abstime _time_after_transition{0};
-		float _time_keep{3.0f};
-
+	bool _was_in_transition{false};
+	hrt_abstime _time_after_transition{0};
+	float _time_keep{2.0f};
+	float _altitude_offset{5.0f};
+	float _wastrans_min_thrust{0.2f};
 	/**
 	 * Update our local parameter cache.
 	 */
@@ -511,7 +515,6 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_R_setpoint.identity();
 
 	_thrust_int.zero();
-
 	/* fetch initial parameter values */
 	parameters_update(true);
 }
@@ -562,7 +565,6 @@ MulticopterPositionControl::parameters_update(bool force)
 	if (updated) {
 		orb_copy(ORB_ID(parameter_update), _params_sub, &param_upd);
 	}
-
 	if (updated || force) {
 		ModuleParams::updateParams();
 		SuperBlock::updateParams();
@@ -570,7 +572,10 @@ MulticopterPositionControl::parameters_update(bool force)
 		_flight_tasks.handleParameterUpdate();
 
 		/* initialize vectors from params and enforce constraints */
-
+		//xj-zhang
+		_time_keep=_time_keep_p.get();//get params
+		_altitude_offset=_altitude_offset_p.get();
+		_wastrans_min_thrust=_wastrans_min_thrust_p.get();
 		_pos_p(0) = _xy_p.get();
 		_pos_p(1) = _xy_p.get();
 		_pos_p(2) = _z_p.get();
@@ -2960,7 +2965,6 @@ MulticopterPositionControl::task_main()
 	while (!_task_should_exit) {
 		/* wait for up to 20ms for data */
 		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 20);
-
 		/* timed out - periodic check for _task_should_exit */
 		if (pret == 0) {
 			// Go through the loop anyway to copy manual input at 50 Hz.
@@ -3103,7 +3107,6 @@ MulticopterPositionControl::task_main()
 		if (_test_flight_tasks.get() && _flight_tasks.isAnyTaskActive()) {
 
 			_flight_tasks.update();
-
 			/* Get Flighttask setpoints */
 			vehicle_local_position_setpoint_s setpoint = _flight_tasks.getPositionSetpoint();
 
@@ -3135,25 +3138,6 @@ MulticopterPositionControl::task_main()
 				_hold_offboard_z = false;
 
 			}
-			//xj-zhang keep altitude after tailsitter transition
-			if (_vehicle_status.is_vtol) {
-				if(_vehicle_status.in_transition_mode){
-					_was_in_transition = true;
-					_time_after_transition=hrt_absolute_time();
-					_flight_tasks._reset_yaw_setpoint();
-					_flight_tasks._reset_z_setpoint();
-				}else if (_was_in_transition) {
-					float  time_after=(hrt_absolute_time()-_time_after_transition)*1e-6f;
-					if(time_after<_time_keep){
-						setpoint.z=setpoint.z-(1-time_after/_time_keep)*10;
-						_flight_tasks._reset_yaw_setpoint();
-						_flight_tasks._reset_z_setpoint();
-					}
-					else{
-						_was_in_transition=false;
-					}
-				}
-			}
 			// We can only run the control if we're already in-air, have a takeoff setpoint,
 			// or if we're in offboard control.
 			// Otherwise, we should just bail out
@@ -3170,7 +3154,6 @@ MulticopterPositionControl::task_main()
 				_control.updateSetpoint(setpoint);
 				_control.updateConstraints(constraints);
 				_control.generateThrustYawSetpoint(_dt);
-
 				/* fill local position, velocity and thrust setpoint */
 				_local_pos_sp.timestamp = hrt_absolute_time();
 				_local_pos_sp.x = _control.getPosSp()(0);
@@ -3191,12 +3174,6 @@ MulticopterPositionControl::task_main()
 				_att_sp.yaw_sp_move_rate = _control.getYawspeedSetpoint();
 
 			}
-			//xj-zhang
-			if (_vehicle_status.is_vtol) {
-				if((!_vehicle_status.in_transition_mode)&&_was_in_transition){
-					_att_sp.roll_body=_att_sp.pitch_body=0.0f;
-				}
-			}
 			publish_local_pos_sp();
 			publish_attitude();
 
@@ -3208,6 +3185,25 @@ MulticopterPositionControl::task_main()
 			    _control_mode.flag_control_acceleration_enabled) {
 
 				do_control();
+				//xj-zhang keep altitude after tailsitter transition
+				matrix::Vector3f delta(_local_pos.x,_local_pos.y,_local_pos.z);
+				if (_vehicle_status.is_vtol&&_vehicle_status.is_rotary_wing) {
+					if(_vehicle_status.in_transition_mode){
+						_was_in_transition = true;
+						_time_after_transition=hrt_absolute_time();
+						_pos_sp=_pos;
+					}else if (_was_in_transition) {
+						float  time_after=(hrt_absolute_time()-_time_after_transition)*1e-6f;
+						PX4_INFO("was in transition mode ,timer=%.4f",(double)time_after);
+						if(time_after<_time_keep){
+							delta=matrix::Vector3f(0.0f,0.0f,-(1-time_after/_time_keep)*_altitude_offset);
+							_pos_sp=_pos+delta;//reset the pos setpoint
+						}
+						else{
+							_was_in_transition=false;
+						}
+					}
+				}
 
 				/* fill local position, velocity and thrust setpoint */
 				_local_pos_sp.timestamp = hrt_absolute_time();
@@ -3260,6 +3256,16 @@ MulticopterPositionControl::task_main()
 			 * - if the vehicle is a VTOL and it's just doing a transition (the VTOL attitude control module will generate
 			 * attitude setpoints for the transition).
 			 */
+			//xj-zhang
+			if (_vehicle_status.is_vtol&&_vehicle_status.is_rotary_wing) {
+				if((!_vehicle_status.in_transition_mode)&&_was_in_transition){
+					_att_sp.roll_body=_att_sp.pitch_body=0.0f;//reset attitude setpoint
+					matrix::Quatf q_sp = matrix::Eulerf(_att_sp.roll_body, _att_sp.pitch_body, _att_sp.yaw_body);
+					q_sp.copyTo(_att_sp.q_d);
+					if(_att_sp.thrust<_wastrans_min_thrust)//set the ming thrust
+						_att_sp.thrust=_wastrans_min_thrust;
+				}
+			}
 			if (!(_control_mode.flag_control_offboard_enabled &&
 			      !(_control_mode.flag_control_position_enabled ||
 				_control_mode.flag_control_velocity_enabled ||

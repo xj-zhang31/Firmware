@@ -74,6 +74,7 @@ public:
 	float getYawspeedSetpoint() {return _yawspeed_sp;}
 	matrix::Vector3f getVelSp() {return _vel_sp;}
 	matrix::Vector3f getPosSp() {return _pos_sp;}
+	void _reset_pos_sp(matrix::Vector3f delta);
 
 private:
 

@@ -68,6 +68,7 @@ private:
 		float trans_thr_min;
 		float fw_pitch_trim;
 		int32_t motors_off_test;
+		float GROUND_SPEED2_TRANSITION_FRONT_P1;
 	} _params_tailsitter;
 
 	struct {
@@ -75,6 +76,7 @@ private:
 		param_t trans_thr_min;
 		param_t	motors_off_test;
 		param_t fw_pitch_trim;
+		param_t GROUND_SPEED2_TRANSITION_FRONT_P1;
 	} _params_handles_tailsitter;
 
 	enum vtol_mode {

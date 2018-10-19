@@ -358,3 +358,15 @@ PARAM_DEFINE_FLOAT(VT_FW_PITCH_TRIM, 0.0f);
  * @group VTOL Attitude Control
  */
 PARAM_DEFINE_INT32(VT_MOT_OFF_TEST, 0);
+/**
+ * transition condition -- ground speed^2 (m/s)^2
+ *
+ * This parameter is the condition for tailsitter translate speed from forward P1 to P2.
+ *
+ * @min 0
+ * @max 100.0
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(VT_TRAN_P1_GSPE, 16.0f);

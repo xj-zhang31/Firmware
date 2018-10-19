@@ -45,7 +45,7 @@
 #define ARSP_YAW_CTRL_DISABLE 4.0f	// airspeed at which we stop controlling yaw during a front transition
 #define THROTTLE_TRANSITION_MAX 0.1f	// maximum added thrust above last value in transition
 #define PITCH_TRANSITION_FRONT_P1 -0.53f	 // pitch angle to switch to TRANSITION_P2,30 degrees
-#define GROUND_SPEED2_TRANSITION_FRONT_P1	16.0f // ground speed^2 to switch to TRANSITION_P2,5m/s*5m/s
+//#define GROUND_SPEED2_TRANSITION_FRONT_P1	16.0f // ground speed^2 to switch to TRANSITION_P2,5m/s*5m/s
 #define PITCH_TRANSITION_FRONT_P2 -1.4f	// pitch angle to switch to FW,80 degrees
 #define PITCH_TRANSITION_BACK_P1 -1.1f	// pitch angle to switch to MC,50 degrees
 #define PITCH_TRANSITION_BACK_P2 -0.1f	// pitch angle to switch to MC
@@ -67,6 +67,7 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 
 	_params_handles_tailsitter.front_trans_dur_p2 = param_find("VT_TRANS_P2_DUR");
 	_params_handles_tailsitter.trans_thr_min = param_find("VT_TRANS_THR_MIN");
+	_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = param_find("VT_TRAN_P1_GSPE");
 }
 
 void
@@ -79,6 +80,8 @@ Tailsitter::parameters_update()
 	_params_tailsitter.front_trans_dur_p2 = v;
 	param_get(_params_handles_tailsitter.trans_thr_min, &v);
 	_params_tailsitter.trans_thr_min = v;
+	param_get(_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1, &v);
+	_params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = v;
 }
 
 void Tailsitter::update_vtol_state()
@@ -144,7 +147,7 @@ void Tailsitter::update_vtol_state()
 		case TRANSITION_FRONT_P1: {
 			// check if we have reached ground speed  and pitch angle to switch to TRANSITION P2 mode
 				float ground_speed_2=_local_pos->vx*_local_pos->vx+_local_pos->vy*_local_pos->vy;
-				if ((ground_speed_2 >  GROUND_SPEED2_TRANSITION_FRONT_P1 && pitch <= PITCH_TRANSITION_FRONT_P1) || can_transition_on_ground()) {
+				if ((ground_speed_2 >  _params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 && pitch <= PITCH_TRANSITION_FRONT_P1) || can_transition_on_ground()) {
 					_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
 					_time_transition_start_p2=hrt_absolute_time();
 				}

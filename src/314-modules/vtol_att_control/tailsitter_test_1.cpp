@@ -45,7 +45,7 @@
 #define ARSP_YAW_CTRL_DISABLE 4.0f	// airspeed at which we stop controlling yaw during a front transition
 #define THROTTLE_TRANSITION_MAX 0.1f	// maximum added thrust above last value in transition
 #define PITCH_TRANSITION_FRONT_P1 -0.53f	 // pitch angle to switch to TRANSITION_P2,30 degrees
-#define GROUND_SPEED2_TRANSITION_FRONT_P1	16.0f // ground speed^2 to switch to TRANSITION_P2,5m/s*5m/s
+//#define GROUND_SPEED2_TRANSITION_FRONT_P1	16.0f // ground speed^2 to switch to TRANSITION_P2,5m/s*5m/s
 #define PITCH_TRANSITION_FRONT_P2 -1.4f	// pitch angle to switch to FW,80 degrees
 #define PITCH_TRANSITION_BACK -0.25f	// pitch angle to switch to MC
 Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
@@ -68,6 +68,7 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 	//xj-zhang
 	_params_handles_tailsitter.motors_off_test=param_find("VT_MOT_OFF_TEST");
 	_params_handles_tailsitter.fw_pitch_trim = param_find("VT_FW_PITCH_TRIM");
+	_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = param_find("VT_TRAN_P1_GSPE");
 }
 
 void
@@ -85,6 +86,8 @@ Tailsitter::parameters_update()
 	_params_tailsitter.motors_off_test= v2;
 	param_get(_params_handles_tailsitter.fw_pitch_trim, &v);
 	_params_tailsitter.fw_pitch_trim=v;
+	param_get(_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1, &v);
+	_params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = v;
 }
 
 void Tailsitter::update_vtol_state()

@@ -337,3 +337,6 @@ void PositionControl::_setParams()
 	param_get(_ThrMax_h, &_ThrustLimit.max);
 	param_get(_ThrMin_h, &_ThrustLimit.min);
 }
+void PositionControl::_reset_pos_sp(matrix::Vector3f delta){
+	_pos_sp=_pos+delta;
+}
