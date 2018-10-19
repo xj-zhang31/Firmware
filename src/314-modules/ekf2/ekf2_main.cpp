@@ -70,8 +70,9 @@
 #include <uORB/topics/landing_target_pose.h>
 #include <uORB/topics/vehicle_air_data.h>
 #include <uORB/topics/vehicle_magnetometer.h>
+//xj-zhang
 #include <uORB/topics/vehicle_euler.h>
-
+#include <vtol_att_control/vtol_type.h>
 using math::constrain;
 
 extern "C" __EXPORT int ekf2_main(int argc, char *argv[]);
@@ -187,6 +188,8 @@ private:
 	orb_advert_t _att_pub{nullptr};
 	//*xj-zhang
 	orb_advert_t _euler_pub{nullptr};
+	int32_t _vtol_type{-1};
+
 	orb_advert_t _wind_pub{nullptr};
 	orb_advert_t _estimator_status_pub{nullptr};
 	orb_advert_t _estimator_innovations_pub{nullptr};
@@ -399,7 +402,9 @@ private:
 		(ParamFloat<px4::params::EKF2_PCOEF_Y>)
 		_K_pstatic_coef_y,	///< static pressure position error coefficient along the Y body axis
 		(ParamFloat<px4::params::EKF2_PCOEF_Z>)
-		_K_pstatic_coef_z	///< static pressure position error coefficient along the Z body axis
+		_K_pstatic_coef_z,	///< static pressure position error coefficient along the Z body axis
+		(ParamInt<px4::params::VT_TYPE>) _vtol_type_p
+
 	)
 
 };
@@ -519,6 +524,8 @@ Ekf2::Ekf2():
 	}
 
 	// initialise parameter cache
+	//xj-zhang
+	_vtol_type=_vtol_type_p.get();
 	updateParams();
 }
 
@@ -1056,6 +1063,10 @@ void Ekf2::run()
 				}
 				vehicle_euler_s vehicle_euler;
 				matrix::Dcmf R = matrix::Quatf(q);
+				if(_vtol_type== vtol_type::TAILSITTER&&(!vehicle_status.is_rotary_wing)){
+					matrix::Dcmf R_offset = Eulerf(0, M_PI_2_F, 0);
+					R=R*R_offset;
+				}
 				matrix::Eulerf euler_angles(R);
 				vehicle_euler.roll=euler_angles.phi();
 				vehicle_euler.pitch=euler_angles.theta();

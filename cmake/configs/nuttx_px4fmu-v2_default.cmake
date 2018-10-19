@@ -131,7 +131,7 @@ set(config_module_list
 	#
 	# Logging
 	#
-	modules/logger
+	314-modules/logger
 	#modules/sdlog2
 
 	#

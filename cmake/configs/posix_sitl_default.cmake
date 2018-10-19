@@ -76,7 +76,7 @@ set(config_module_list
 	# Estimation modules
 	#
 	modules/attitude_estimator_q
-	modules/ekf2
+	314-modules/ekf2
 	modules/local_position_estimator
 	modules/position_estimator_inav
 	modules/wind_estimator
@@ -94,8 +94,8 @@ set(config_module_list
 	#
 	# Logging
 	#
-	modules/logger
-	modules/sdlog2
+	314-modules/logger
+	#modules/sdlog2
 
 	#
 	# Library modules
