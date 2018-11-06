@@ -144,12 +144,12 @@ void Tailsitter::update_vtol_state()
 			//xj-zhang
 		case TRANSITION_FRONT_P1: {
 			// check if we have reached ground speed  and pitch angle to switch to TRANSITION P2 mode
-				float ground_speed_2=_local_pos->vx*_local_pos->vx+_local_pos->vy*_local_pos->vy;
-				if ((ground_speed_2 >  GROUND_SPEED2_TRANSITION_FRONT_P1 && pitch <= PITCH_TRANSITION_FRONT_P1) || can_transition_on_ground()) {
-					_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
-					_time_transition_start_p2=hrt_absolute_time();
-				}
-				break;
+			float ground_speed_2=_local_pos->vx*_local_pos->vx+_local_pos->vy*_local_pos->vy;
+			if ((ground_speed_2 >  _params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 && pitch <= PITCH_TRANSITION_FRONT_P1) || can_transition_on_ground()) {
+				_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
+				_time_transition_start_p2=hrt_absolute_time();
+			}
+			break;
 		}
 		case TRANSITION_FRONT_P2: {
 
@@ -260,12 +260,12 @@ void Tailsitter::update_transition_state()
 		_mc_roll_weight = _mc_pitch_weight = time_since_trans_start / _params->back_trans_duration*2;
 	}
 
-	if (_v_control_mode->flag_control_climb_rate_enabled) {
+	/*if (_v_control_mode->flag_control_climb_rate_enabled) {
 		_v_att_sp->thrust = _params->front_trans_throttle;
 	} else {
 		_v_att_sp->thrust = _mc_virtual_att_sp->thrust;
 
-	}
+	}*/
 	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,1.0f);
 	_mc_roll_weight = math::constrain(_mc_roll_weight, 0.0f, 1.0f);
 	_mc_yaw_weight = math::constrain(_mc_yaw_weight, 0.0f, 1.0f);
