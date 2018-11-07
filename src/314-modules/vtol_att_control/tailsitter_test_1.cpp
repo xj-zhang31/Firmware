@@ -65,6 +65,7 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 
 	_params_handles_tailsitter.front_trans_dur_p2 = param_find("VT_TRANS_P2_DUR");
 	_params_handles_tailsitter.trans_thr_min = param_find("VT_TRANS_THR_MIN");
+	_params_handles_tailsitter.trans_thr_max = param_find("VT_TRANS_THR_MAX");
 	//xj-zhang
 	_params_handles_tailsitter.motors_off_test=param_find("VT_MOT_OFF_TEST");
 	_params_handles_tailsitter.fw_pitch_trim = param_find("VT_FW_PITCH_TRIM");
@@ -82,6 +83,8 @@ Tailsitter::parameters_update()
 	_params_tailsitter.front_trans_dur_p2 = v;
 	param_get(_params_handles_tailsitter.trans_thr_min, &v);
 	_params_tailsitter.trans_thr_min = v;
+	param_get(_params_handles_tailsitter.trans_thr_max, &v);
+	_params_tailsitter.trans_thr_max = v;
 	param_get(_params_handles_tailsitter.motors_off_test, &v2);
 	_params_tailsitter.motors_off_test= v2;
 	param_get(_params_handles_tailsitter.fw_pitch_trim, &v);
@@ -144,12 +147,12 @@ void Tailsitter::update_vtol_state()
 			//xj-zhang
 		case TRANSITION_FRONT_P1: {
 			// check if we have reached ground speed  and pitch angle to switch to TRANSITION P2 mode
-				float ground_speed_2=_local_pos->vx*_local_pos->vx+_local_pos->vy*_local_pos->vy;
-				if ((ground_speed_2 >  GROUND_SPEED2_TRANSITION_FRONT_P1 && pitch <= PITCH_TRANSITION_FRONT_P1) || can_transition_on_ground()) {
-					_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
-					_time_transition_start_p2=hrt_absolute_time();
-				}
-				break;
+			float ground_speed_2=_local_pos->vx*_local_pos->vx+_local_pos->vy*_local_pos->vy;
+			if ((ground_speed_2 >  _params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 && pitch <= PITCH_TRANSITION_FRONT_P1) || can_transition_on_ground()) {
+				_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
+				_time_transition_start_p2=hrt_absolute_time();
+			}
+			break;
 		}
 		case TRANSITION_FRONT_P2: {
 
@@ -186,9 +189,14 @@ void Tailsitter::update_vtol_state()
 		break;
 
 	case TRANSITION_FRONT_P1:
+		_vtol_mode = TRANSITION_TO_FW;
+		_vtol_vehicle_status->vtol_in_trans_mode = true;
+		_vtol_vehicle_status->vtol_trans_in_P1=true;
+		break;
 	case TRANSITION_FRONT_P2:
 		_vtol_mode = TRANSITION_TO_FW;
 		_vtol_vehicle_status->vtol_in_trans_mode = true;
+		_vtol_vehicle_status->vtol_trans_in_P1=false;
 		break;
 	case TRANSITION_BACK:
 		_vtol_mode = TRANSITION_TO_MC;
@@ -231,6 +239,7 @@ void Tailsitter::update_transition_state()
 		_thrust_transition_start=_v_att_sp->thrust;
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P2) {
 		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params->front_trans_duration/2);
+		float H=_params_tailsitter.trans_thr_max-_thrust_transition_start;
 		// create time dependant pitch angle set point + 0.2 rad overlap over the switch value
 		_v_att_sp->pitch_body = _pitch_transition_start_p2- fabsf(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2) *scale;
 		_v_att_sp->pitch_body = math::constrain(_v_att_sp->pitch_body, PITCH_TRANSITION_FRONT_P2-0.1f,
@@ -240,7 +249,7 @@ void Tailsitter::update_transition_state()
 		_mc_yaw_weight = 0.0f;
 		_mc_roll_weight = 0.0f;
 		_mc_pitch_weight = 1.0f-scale;
-		_v_att_sp->thrust =_thrust_transition_start+THROTTLE_TRANSITION_MAX*scale;
+		_v_att_sp->thrust =_thrust_transition_start+math::constrain((H-H*(scale-1.0f)*(scale-1.0f)),0.0f,H);//THROTTLE_TRANSITION_MAX*scale;
 
 	}else if (_vtol_schedule.flight_mode == TRANSITION_BACK) {
 		if (!flag_idle_mc) {
@@ -260,13 +269,8 @@ void Tailsitter::update_transition_state()
 		_mc_roll_weight = _mc_pitch_weight = time_since_trans_start / _params->back_trans_duration*2;
 	}
 
-	if (_v_control_mode->flag_control_climb_rate_enabled) {
-		_v_att_sp->thrust = _params->front_trans_throttle;
-	} else {
-		_v_att_sp->thrust = _mc_virtual_att_sp->thrust;
-
-	}
-	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,1.0f);
+	//xj-zhang
+	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,0.9f);
 	_mc_roll_weight = math::constrain(_mc_roll_weight, 0.0f, 1.0f);
 	_mc_yaw_weight = math::constrain(_mc_yaw_weight, 0.0f, 1.0f);
 	_mc_pitch_weight = math::constrain(_mc_pitch_weight, 0.0f, 1.0f);

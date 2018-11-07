@@ -1068,6 +1068,7 @@ void Ekf2::run()
 					R=R*R_offset;
 				}
 				matrix::Eulerf euler_angles(R);
+				vehicle_euler.timestamp = hrt_absolute_time();
 				vehicle_euler.roll=euler_angles.phi();
 				vehicle_euler.pitch=euler_angles.theta();
 				vehicle_euler.yaw=euler_angles.psi();

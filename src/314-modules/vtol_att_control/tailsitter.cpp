@@ -64,9 +64,10 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 	_mc_yaw_weight = 1.0f;
 
 	_flag_was_in_trans_mode = false;
-
+	//xj-zhang
 	_params_handles_tailsitter.front_trans_dur_p2 = param_find("VT_TRANS_P2_DUR");
 	_params_handles_tailsitter.trans_thr_min = param_find("VT_TRANS_THR_MIN");
+	_params_handles_tailsitter.trans_thr_max = param_find("VT_TRANS_THR_MAX");
 	_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = param_find("VT_TRAN_P1_GSPE");
 }
 
@@ -76,10 +77,13 @@ Tailsitter::parameters_update()
 	float v;
 
 	/* vtol front transition phase 2 duration */
+	//xj-zhang
 	param_get(_params_handles_tailsitter.front_trans_dur_p2, &v);
 	_params_tailsitter.front_trans_dur_p2 = v;
 	param_get(_params_handles_tailsitter.trans_thr_min, &v);
 	_params_tailsitter.trans_thr_min = v;
+	param_get(_params_handles_tailsitter.trans_thr_max, &v);
+	_params_tailsitter.trans_thr_max = v;
 	param_get(_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1, &v);
 	_params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = v;
 }
@@ -194,14 +198,24 @@ void Tailsitter::update_vtol_state()
 		break;
 
 	case TRANSITION_FRONT_P1:
+		_vtol_mode = TRANSITION_TO_FW;
+		_vtol_vehicle_status->vtol_in_trans_mode = true;
+		_vtol_vehicle_status->vtol_trans_in_P1=true;
+		break;
 	case TRANSITION_FRONT_P2:
 		_vtol_mode = TRANSITION_TO_FW;
 		_vtol_vehicle_status->vtol_in_trans_mode = true;
+		_vtol_vehicle_status->vtol_trans_in_P1=false;
 		break;
 	case TRANSITION_BACK_P1:
+		_vtol_mode = TRANSITION_TO_MC;
+		_vtol_vehicle_status->vtol_in_trans_mode = true;
+		_vtol_vehicle_status->vtol_trans_in_P1=true;
+		break;
 	case TRANSITION_BACK_P2:
 		_vtol_mode = TRANSITION_TO_MC;
 		_vtol_vehicle_status->vtol_in_trans_mode = true;
+		_vtol_vehicle_status->vtol_trans_in_P1=false;
 		break;
 	}
 }
@@ -240,6 +254,8 @@ void Tailsitter::update_transition_state()
 		_thrust_transition_start=_v_att_sp->thrust;
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P2) {
 		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params->front_trans_duration/2);
+		float H=_params_tailsitter.trans_thr_max-_thrust_transition_start;
+
 		// create time dependant pitch angle set point + 0.2 rad overlap over the switch value
 		_v_att_sp->pitch_body = _pitch_transition_start_p2- fabsf(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2) *scale;
 		_v_att_sp->pitch_body = math::constrain(_v_att_sp->pitch_body, PITCH_TRANSITION_FRONT_P2-0.1f,
@@ -249,7 +265,7 @@ void Tailsitter::update_transition_state()
 		_mc_yaw_weight = 0.0f;
 		_mc_roll_weight = 0.0f;
 		_mc_pitch_weight = 1.0f-scale;
-		_v_att_sp->thrust =_thrust_transition_start+THROTTLE_TRANSITION_MAX*scale;
+		_v_att_sp->thrust =_thrust_transition_start+ math::constrain((H-H*(scale-1.0f)*(scale-1.0f)),0.0f,H);//THROTTLE_TRANSITION_MAX*scale;
 
 	}else if(_vtol_schedule.flight_mode == TRANSITION_BACK_P1) {
 		_v_att_sp->pitch_body =_pitch_transition_start+fabsf(PITCH_TRANSITION_BACK_P1-_pitch_transition_start)*
@@ -279,16 +295,11 @@ void Tailsitter::update_transition_state()
 		// smoothly move control weight to MC
 		_mc_roll_weight = scale;
 		_mc_pitch_weight=1;
-		_v_att_sp->thrust=_thrust_transition_start;
+		//xj-zhang test
+		_v_att_sp->thrust=_mc_virtual_att_sp->thrust;//_thrust_transition_start;
 	}
-
-	/*if (_v_control_mode->flag_control_climb_rate_enabled) {
-		_v_att_sp->thrust = _params->front_trans_throttle;
-	} else {
-		_v_att_sp->thrust = _mc_virtual_att_sp->thrust;
-
-	}*/
-	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,1.0f);
+	//xj-zhang
+	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,0.9f);
 	_mc_roll_weight = math::constrain(_mc_roll_weight, 0.0f, 1.0f);
 	_mc_yaw_weight = math::constrain(_mc_yaw_weight, 0.0f, 1.0f);
 	_mc_pitch_weight = math::constrain(_mc_pitch_weight, 0.0f, 1.0f);
