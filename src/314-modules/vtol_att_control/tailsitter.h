@@ -93,6 +93,8 @@ private:
 
 	float _thrust_transition_start; // throttle value when we start the front transition
 	float _yaw_transition;	// yaw angle in which transition will take place
+	//xj-zhang
+	float _fw_roll_weight=0.0f;
 	float _pitch_transition_start;  // pitch angle at the start of transition (tailsitter)
 	//xj-zhang
 	float _pitch_transition_start_p2{0.0f};// pitch angle at the start of transition P2 (tailsitter)
