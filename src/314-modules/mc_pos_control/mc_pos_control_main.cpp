@@ -3192,6 +3192,10 @@ MulticopterPositionControl::task_main()
 						_was_in_transition = true;
 						_time_after_transition=hrt_absolute_time();
 						_pos_sp=_pos;
+						matrix::Eulerf att_now=matrix::Quatf(_att.q);
+						_att_sp.yaw_body=att_now.psi();
+						matrix::Quatf q_sp = matrix::Eulerf(_att_sp.roll_body, _att_sp.pitch_body, _att_sp.yaw_body);
+						q_sp.copyTo(_att_sp.q_d);
 					}else if (_was_in_transition) {
 						float  time_after=(hrt_absolute_time()-_time_after_transition)*1e-6f;
 						PX4_INFO("was in transition mode ,timer=%.4f",(double)time_after);
@@ -3260,6 +3264,8 @@ MulticopterPositionControl::task_main()
 			if (_vehicle_status.is_vtol&&_vehicle_status.is_rotary_wing) {
 				if((!_vehicle_status.in_transition_mode)&&_was_in_transition){
 					_att_sp.roll_body=_att_sp.pitch_body=0.0f;//reset attitude setpoint
+					matrix::Eulerf att_now=matrix::Quatf(_att.q);
+					_att_sp.yaw_body=att_now.psi();
 					matrix::Quatf q_sp = matrix::Eulerf(_att_sp.roll_body, _att_sp.pitch_body, _att_sp.yaw_body);
 					q_sp.copyTo(_att_sp.q_d);
 					if(_att_sp.thrust<_wastrans_min_thrust)//set the ming thrust
