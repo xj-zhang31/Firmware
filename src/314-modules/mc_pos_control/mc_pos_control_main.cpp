@@ -3260,6 +3260,8 @@ MulticopterPositionControl::task_main()
 			if (_vehicle_status.is_vtol&&_vehicle_status.is_rotary_wing) {
 				if((!_vehicle_status.in_transition_mode)&&_was_in_transition){
 					_att_sp.roll_body=_att_sp.pitch_body=0.0f;//reset attitude setpoint
+					matrix::Eulerf att_now= matrix::Quatf(_att.q);
+					_att_sp.yaw_body=-att_now(2);
 					matrix::Quatf q_sp = matrix::Eulerf(_att_sp.roll_body, _att_sp.pitch_body, _att_sp.yaw_body);
 					q_sp.copyTo(_att_sp.q_d);
 					if(_att_sp.thrust<_wastrans_min_thrust)//set the ming thrust
