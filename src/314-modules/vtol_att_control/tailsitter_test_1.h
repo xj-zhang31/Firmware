@@ -70,6 +70,8 @@ private:
 		float fw_pitch_trim;
 		int32_t motors_off_test;
 		float GROUND_SPEED2_TRANSITION_FRONT_P1;
+		float manual_pitch_max;
+		float manual_roll_max;
 	} _params_tailsitter;
 
 	struct {
@@ -79,6 +81,8 @@ private:
 		param_t	motors_off_test;
 		param_t fw_pitch_trim;
 		param_t GROUND_SPEED2_TRANSITION_FRONT_P1;
+		param_t manual_pitch_max;
+		param_t manual_roll_max;
 	} _params_handles_tailsitter;
 
 	enum vtol_mode {
@@ -100,6 +104,7 @@ private:
 	//xj-zhang
 	float _pitch_transition_start_p2{0.0f};// pitch angle at the start of transition P2 (tailsitter)
 	hrt_abstime _time_transition_start_p2{0};
+	struct manual_control_setpoint_s *_manual;
 
 	/**
 	 * Update parameters.

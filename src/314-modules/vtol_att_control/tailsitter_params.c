@@ -53,3 +53,90 @@
  * @group VTOL Attitude Control
 
 PARAM_DEFINE_FLOAT(VT_TRANS_P2_DUR, 0.5f);*/
+/**
+ * The channel number of motors that must be turned off in fixed wing mode.
+ *
+ * @min 0
+ * @max 12345678
+ * @increment 1
+ * @decimal 0
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_INT32(VT_FW_MOT_OFFID, 0);
+/**
+ * The min thrust setpoint in transition ,tailsitter
+ *
+ * @min 0
+ * @max 1.0
+ * @increment 0.1
+ * @decimal 1
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_TRAN_THR_MIN, 0.4);
+/**
+ * The max thrust setpoint in transition ,tailsitter
+ *
+ * @min 0
+ * @max 1.0
+ * @increment 0.1
+ * @decimal 1
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_TRAN_THR_MAX, 0.8);
+/**
+ * Fixed wing pitch trim
+ *
+ * This parameter allows to adjust the neutral elevon position in fixed wing mode.
+ *
+ * @min -1.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_FWPITCH_TRIM, 0.0f);
+/**
+ * turn off small motors
+ *
+ * If set to 1 , pilot can use  flag to contorl small rotors
+ *
+ * @boolean
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_INT32(ZXJ_MOTOFF_TEST, 0);
+/**
+ * transition condition -- ground speed^2 (m/s)^2
+ *
+ * This parameter is the condition for tailsitter translate speed from forward P1 to P2.
+ *
+ * @min 0
+ * @max 100.0
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_TRANP1_GSPE, 16.0f);
+/**
+ * manual control max pitch degree in rad during transintion
+ *
+ *
+ *
+ * @min 0
+ * @max 1.57
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_MAN_PIT_MAX, 0.5f);
+/**
+ * manual control max roll degree in rad during transintion
+ *
+ *
+ *
+ * @min 0
+ * @max 1.57
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_MAN_ROL_MAX, 0.4f);

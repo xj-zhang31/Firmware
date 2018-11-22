@@ -66,9 +66,12 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 	_flag_was_in_trans_mode = false;
 	//xj-zhang
 	_params_handles_tailsitter.front_trans_dur_p2 = param_find("VT_TRANS_P2_DUR");
-	_params_handles_tailsitter.trans_thr_min = param_find("VT_TRANS_THR_MIN");
-	_params_handles_tailsitter.trans_thr_max = param_find("VT_TRANS_THR_MAX");
-	_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = param_find("VT_TRAN_P1_GSPE");
+	_params_handles_tailsitter.trans_thr_min = param_find("ZXJ_TRAN_THR_MIN");
+	_params_handles_tailsitter.trans_thr_max = param_find("ZXJ_TRAN_THR_MAX");
+	_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = param_find("ZXJ_TRANP1_GSPE");
+	_params_handles_tailsitter.manual_pitch_max=param_find("ZXJ_MAN_PIT_MAX");
+	_params_handles_tailsitter.manual_roll_max=param_find("ZXJ_MAN_ROL_MAX");
+	_manual=_attc->get_manual_control_sp();
 }
 
 void
@@ -86,6 +89,10 @@ Tailsitter::parameters_update()
 	_params_tailsitter.trans_thr_max = v;
 	param_get(_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1, &v);
 	_params_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = v;
+	param_get(_params_handles_tailsitter.manual_pitch_max, &v);
+	_params_tailsitter.manual_pitch_max = v;
+	param_get(_params_handles_tailsitter.manual_roll_max, &v);
+	_params_tailsitter.manual_roll_max = v;
 }
 
 void Tailsitter::update_vtol_state()
@@ -163,7 +170,7 @@ void Tailsitter::update_vtol_state()
 				airspeed_condition_satisfied |= _params->airspeed_disabled;
 
 				// check if we have reached airspeed  and pitch angle to switch to TRANSITION P2 mode
-				if ((airspeed_condition_satisfied && pitch <= PITCH_TRANSITION_FRONT_P2)) {
+				if ((pitch <= PITCH_TRANSITION_FRONT_P2)) {
 					_vtol_schedule.flight_mode = FW_MODE;
 				}
 
@@ -272,7 +279,7 @@ void Tailsitter::update_transition_state()
 
 	}else if(_vtol_schedule.flight_mode == TRANSITION_BACK_P1) {
 		_v_att_sp->pitch_body =_pitch_transition_start+fabsf(PITCH_TRANSITION_BACK_P1-_pitch_transition_start)*
-							time_since_trans_start / _params->back_trans_duration*2;
+							time_since_trans_start / _params->back_trans_duration;
 		_v_att_sp->pitch_body = math::constrain(_v_att_sp->pitch_body, -2.0f, PITCH_TRANSITION_BACK_P1 + 0.2f);
 		_mc_yaw_weight = _mc_roll_weight=0.0f;
 		_fw_roll_weight=1.0f;
@@ -282,7 +289,7 @@ void Tailsitter::update_transition_state()
 		_pitch_transition_start_p2= euler.theta();
 	}
 	else if (_vtol_schedule.flight_mode == TRANSITION_BACK_P2) {
-		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ _params->back_trans_duration*6;
+		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ _params->back_trans_duration*2;
 		if (!flag_idle_mc) {
 			flag_idle_mc = set_idle_mc();
 		}
@@ -313,6 +320,14 @@ void Tailsitter::update_transition_state()
 	_v_att_sp->timestamp = hrt_absolute_time();
 	_v_att_sp->roll_body = 0.0f;
 	_v_att_sp->yaw_body = _yaw_transition;
+	//xj-zhang
+	_v_att_sp->pitch_body+=(-_manual->x)*_params_tailsitter.manual_pitch_max;
+	_v_att_sp->roll_body+=_manual->y*_params_tailsitter.manual_roll_max;
+	if(_vtol_schedule.flight_mode == TRANSITION_BACK_P2){
+		matrix::Eulerf att_now=matrix::Quatf(_v_att->q);
+		_v_att_sp->yaw_body=att_now.psi();
+	}
+
 
 	matrix::Quatf q_sp = matrix::Eulerf(_v_att_sp->roll_body, _v_att_sp->pitch_body, _v_att_sp->yaw_body);
 	q_sp.copyTo(_v_att_sp->q_d);

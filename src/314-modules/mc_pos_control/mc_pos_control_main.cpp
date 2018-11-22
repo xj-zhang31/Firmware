@@ -231,9 +231,8 @@ private:
 		(ParamFloat<px4::params::RC_FLT_SMP_RATE>) _rc_flt_smp_rate,
 		(ParamFloat<px4::params::MPC_ACC_HOR_ESTM>) _acc_max_estimator_xy,
 		//xj-zhang
-		(ParamFloat<px4::params::MPC_TRANS_KEEP>) _time_keep_p,
-		(ParamFloat<px4::params::MPC_TRANS_ALOF>) _altitude_offset_p,
-		(ParamFloat<px4::params::MPC_WAST_MIN_THR>) _wastrans_min_thrust_p
+		(ParamFloat<px4::params::ZXJ_TRANS_KEEP>) _time_keep_p,
+		(ParamFloat<px4::params::ZXJ_WAST_MIN_THR>) _wastrans_min_thrust_p
 
 	);
 
@@ -315,7 +314,6 @@ private:
 	bool _was_in_transition{false};
 	hrt_abstime _time_after_transition{0};
 	float _time_keep{2.0f};
-	float _altitude_offset{5.0f};
 	float _wastrans_min_thrust{0.2f};
 	/**
 	 * Update our local parameter cache.
@@ -574,7 +572,6 @@ MulticopterPositionControl::parameters_update(bool force)
 		/* initialize vectors from params and enforce constraints */
 		//xj-zhang
 		_time_keep=_time_keep_p.get();//get params
-		_altitude_offset=_altitude_offset_p.get();
 		_wastrans_min_thrust=_wastrans_min_thrust_p.get();
 		_pos_p(0) = _xy_p.get();
 		_pos_p(1) = _xy_p.get();
@@ -3103,7 +3100,27 @@ MulticopterPositionControl::task_main()
 			/* make sure to disable any task when we are not testing them */
 			_flight_tasks.switchTask(FlightTaskIndex::None);
 		}
+		//xj-zhang keep altitude after tailsitter transition
+		if (_vehicle_status.is_vtol&&_vehicle_status.is_rotary_wing) {
+			if(_vehicle_status.in_transition_mode){
+				_was_in_transition = true;
+				_time_after_transition=hrt_absolute_time();
+				_pos_sp=_pos;
+				matrix::Eulerf att_now=matrix::Quatf(_att.q);
+				_att_sp.yaw_body=att_now.psi();
+				matrix::Quatf q_sp = matrix::Eulerf(_att_sp.roll_body, _att_sp.pitch_body, _att_sp.yaw_body);
+				q_sp.copyTo(_att_sp.q_d);
+			}else if (_was_in_transition) {
+				float  time_after=(hrt_absolute_time()-_time_after_transition)*1e-6f;
+				PX4_INFO("was in transition mode ,timer=%.4f",(double)time_after);
+				if(time_after<_time_keep){
 
+				}
+				else{
+					_was_in_transition=false;
+				}
+			}
+		}
 		if (_test_flight_tasks.get() && _flight_tasks.isAnyTaskActive()) {
 
 			_flight_tasks.update();
@@ -3185,30 +3202,11 @@ MulticopterPositionControl::task_main()
 			    _control_mode.flag_control_acceleration_enabled) {
 
 				do_control();
-				//xj-zhang keep altitude after tailsitter transition
+				//xj-zhang update pos set point
 				matrix::Vector3f delta(_local_pos.x,_local_pos.y,_local_pos.z);
-				if (_vehicle_status.is_vtol&&_vehicle_status.is_rotary_wing) {
-					if(_vehicle_status.in_transition_mode){
-						_was_in_transition = true;
-						_time_after_transition=hrt_absolute_time();
-						_pos_sp=_pos;
-						matrix::Eulerf att_now=matrix::Quatf(_att.q);
-						_att_sp.yaw_body=att_now.psi();
-						matrix::Quatf q_sp = matrix::Eulerf(_att_sp.roll_body, _att_sp.pitch_body, _att_sp.yaw_body);
-						q_sp.copyTo(_att_sp.q_d);
-					}else if (_was_in_transition) {
-						float  time_after=(hrt_absolute_time()-_time_after_transition)*1e-6f;
-						PX4_INFO("was in transition mode ,timer=%.4f",(double)time_after);
-						if(time_after<_time_keep){
-							delta=matrix::Vector3f(0.0f,0.0f,-(1-time_after/_time_keep)*_altitude_offset);
-							_pos_sp=_pos+delta;//reset the pos setpoint
-						}
-						else{
-							_was_in_transition=false;
-						}
-					}
+				if(_was_in_transition){
+					_pos_sp=_pos;//reset the pos setpoint
 				}
-
 				/* fill local position, velocity and thrust setpoint */
 				_local_pos_sp.timestamp = hrt_absolute_time();
 				_local_pos_sp.x = _pos_sp(0);
