@@ -167,7 +167,7 @@ void Tailsitter::update_vtol_state()
 				airspeed_condition_satisfied |= _params->airspeed_disabled;
 
 				// check if we have reached airspeed  and pitch angle to switch to TRANSITION P2 mode
-				if ((airspeed_condition_satisfied && pitch <= PITCH_TRANSITION_FRONT_P2)) {
+				if ((pitch <= PITCH_TRANSITION_FRONT_P2)) {
 					_vtol_schedule.flight_mode = FW_MODE;
 				}
 
