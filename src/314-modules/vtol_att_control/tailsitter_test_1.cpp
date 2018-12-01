@@ -44,7 +44,7 @@
 
 #define ARSP_YAW_CTRL_DISABLE 4.0f	// airspeed at which we stop controlling yaw during a front transition
 #define THROTTLE_TRANSITION_MAX 0.1f	// maximum added thrust above last value in transition
-#define PITCH_TRANSITION_FRONT_P1 -0.53f	 // pitch angle to switch to TRANSITION_P2,30 degrees
+#define PITCH_TRANSITION_FRONT_P1 -0.7f	 // pitch angle to switch to TRANSITION_P2,30 degrees
 //#define GROUND_SPEED2_TRANSITION_FRONT_P1	16.0f // ground speed^2 to switch to TRANSITION_P2,5m/s*5m/s
 #define PITCH_TRANSITION_FRONT_P2 -1.4f	// pitch angle to switch to FW,80 degrees
 #define PITCH_TRANSITION_BACK -0.25f	// pitch angle to switch to MC
@@ -242,7 +242,7 @@ void Tailsitter::update_transition_state()
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P2) {
 		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params->front_trans_duration);
 		float H=_params_tailsitter.trans_thr_max-_thrust_transition_start;
-		float weight=(euler.theta()-_pitch_transition_start_p2)/fabsf(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2);
+		float weight=fabsf((euler.theta()-_pitch_transition_start_p2)/(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2));
 		// create time dependant pitch angle set point + 0.2 rad overlap over the switch value
 		float k=(_pitch_transition_start_p2-PITCH_TRANSITION_FRONT_P2);
 		//使用二次函数设定俯仰角
@@ -254,9 +254,10 @@ void Tailsitter::update_transition_state()
 
 		// disable mc yaw control once the plane has picked up speed
 		_mc_yaw_weight = 0.0f;
-		_mc_roll_weight = 1.0f-weight*2;
+		_mc_roll_weight = 0.0f;//1.0f-weight*2;
 		_mc_pitch_weight = 1.0f-weight;
-		_v_att_sp->thrust =_thrust_transition_start+math::constrain((H-H*(weight-1.0f)*(weight-1.0f)),0.0f,H);//THROTTLE_TRANSITION_MAX*scale;
+		PX4_INFO("weight=%.4f",(double)weight);
+		_v_att_sp->thrust =_thrust_transition_start+math::constrain((H-H*(weight*2-1.0f)*(weight*2-1.0f)),0.0f,H);//THROTTLE_TRANSITION_MAX*scale;
 
 	}else if (_vtol_schedule.flight_mode == TRANSITION_BACK) {
 		if (!flag_idle_mc) {
@@ -376,7 +377,7 @@ void Tailsitter::fill_actuator_outputs()
 		// in transition engines are mixed by weight (BACK TRANSITION ONLY)
 		//xj-zhang
 		//mc_pitch_weight在P2阶段均匀减小到0，mc_roll_weight 在P2阶段以2倍速度减小到0
-		_actuators_out_0->control[actuator_controls_s::INDEX_ROLL] = _actuators_mc_in->control[actuator_controls_s::INDEX_ROLL]* _mc_roll_weight
+		_actuators_out_0->control[actuator_controls_s::INDEX_ROLL] =_actuators_mc_in->control[actuator_controls_s::INDEX_ROLL]* _mc_roll_weight
 			+_actuators_fw_in->control[actuator_controls_s::INDEX_YAW]*(1- _mc_pitch_weight);
 		_actuators_out_0->control[actuator_controls_s::INDEX_PITCH] =_actuators_mc_in->control[actuator_controls_s::INDEX_PITCH] * _mc_pitch_weight;
 		_actuators_out_0->control[actuator_controls_s::INDEX_YAW] = _actuators_mc_in->control[actuator_controls_s::INDEX_YAW] *_mc_yaw_weight;
