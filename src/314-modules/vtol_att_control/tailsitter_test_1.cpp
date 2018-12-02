@@ -112,7 +112,7 @@ Tailsitter::parameters_update()
 	param_get(_params_handles_tailsitter.trans_p3_f_pitch, &v);
 	_params_tailsitter.trans_p3_f_pitch = v;
 	param_get(_params_handles_tailsitter.yaw_control_flag, &v2);
-	_params_tailsitter.yaw_control_flag= v2;
+	_params_tailsitter.yaw_control_flag= (v2==1);
 }
 
 void Tailsitter::update_vtol_state()
@@ -209,8 +209,6 @@ void Tailsitter::update_vtol_state()
 			if (((hrt_absolute_time()-_time_transition_start_p3)* 1e-6f) >= _params_tailsitter.trans_p3_dur) {
 				_vtol_schedule.flight_mode = FW_MODE;
 			}
-
-			break;
 			break;
 		}
 
@@ -309,7 +307,6 @@ void Tailsitter::update_transition_state()
 		_mc_yaw_weight = 0.0f;
 		_mc_roll_weight = 1.0f-weight*2;
 		_mc_pitch_weight = 1.0f-weight;
-		PX4_INFO("weight=%.4f",(double)weight);
 		_v_att_sp->thrust =_thrust_transition_start+math::constrain((H-H*(weight*2-1.0f)*(weight*2-1.0f)),0.0f,H);//THROTTLE_TRANSITION_MAX*scale;
 
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P3) {
