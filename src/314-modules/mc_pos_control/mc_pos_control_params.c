@@ -613,7 +613,7 @@ PARAM_DEFINE_INT32(MPC_FLT_TSK, 0);
  * @max 10
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_TRANS_KEEP, 2.0f);
+PARAM_DEFINE_FLOAT(ZXJ_TRB_KEEP, 2.0f);
 /**
  * Tailsitter position control min thrust setpoint after transition back from fix-wing mode
  *
@@ -624,4 +624,4 @@ PARAM_DEFINE_FLOAT(ZXJ_TRANS_KEEP, 2.0f);
  * @max 1
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_WAST_MIN_THR, 0.4f);
+PARAM_DEFINE_FLOAT(ZXJ_TRB_MIN_THR, 0.4f);

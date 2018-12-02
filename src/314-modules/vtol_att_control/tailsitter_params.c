@@ -117,6 +117,18 @@ PARAM_DEFINE_INT32(ZXJ_MOTOFF_TEST, 0);
  */
 PARAM_DEFINE_FLOAT(ZXJ_TRANP1_GSPE, 16.0f);
 /**
+ * transition P2 duration
+ *
+ * This parameter is the duration for tailsitter transition P2.
+ *
+ * @min 0
+ * @max 10
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_TRANP2_DUR, 2.0f);
+/**
  * manual control max pitch degree in rad during transintion
  *
  *

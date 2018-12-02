@@ -72,6 +72,7 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 	_params_handles_tailsitter.GROUND_SPEED2_TRANSITION_FRONT_P1 = param_find("ZXJ_TRANP1_GSPE");
 	_params_handles_tailsitter.manual_pitch_max=param_find("ZXJ_MAN_PIT_MAX");
 	_params_handles_tailsitter.manual_roll_max=param_find("ZXJ_MAN_ROL_MAX");
+	_params_handles_tailsitter.trans_p2_dur=param_find("ZXJ_TRANP2_DUR");
 	_manual=_attc->get_manual_control_sp();
 }
 
@@ -98,6 +99,8 @@ Tailsitter::parameters_update()
 	_params_tailsitter.manual_pitch_max = v;
 	param_get(_params_handles_tailsitter.manual_roll_max, &v);
 	_params_tailsitter.manual_roll_max = v;
+	param_get(_params_handles_tailsitter.trans_p2_dur, &v);
+	_params_tailsitter.trans_p2_dur = v;
 }
 
 void Tailsitter::update_vtol_state()
@@ -240,21 +243,20 @@ void Tailsitter::update_transition_state()
 		_v_att_sp->thrust = _mc_virtual_att_sp->thrust;
 		_thrust_transition_start=_v_att_sp->thrust;
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P2) {
-		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params->front_trans_duration);
+		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params_tailsitter.trans_p2_dur);
 		float H=_params_tailsitter.trans_thr_max-_thrust_transition_start;
 		float weight=fabsf((euler.theta()-_pitch_transition_start_p2)/(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2));
 		// create time dependant pitch angle set point + 0.2 rad overlap over the switch value
-		float k=(_pitch_transition_start_p2-PITCH_TRANSITION_FRONT_P2);
 		//使用二次函数设定俯仰角
 		if(scale>1)
 			scale=1;
-		_v_att_sp->pitch_body =k*(1-scale)*(1-scale)+PITCH_TRANSITION_FRONT_P2;// _pitch_transition_start_p2- fabsf(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2) *scale;
+		_v_att_sp->pitch_body =(_pitch_transition_start_p2-PITCH_TRANSITION_FRONT_P2)*(1-scale)*(1-scale)+PITCH_TRANSITION_FRONT_P2;// _pitch_transition_start_p2- fabsf(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2) *scale;
 		_v_att_sp->pitch_body = math::constrain(_v_att_sp->pitch_body, PITCH_TRANSITION_FRONT_P2-0.1f,
 							_pitch_transition_start_p2);
 
 		// disable mc yaw control once the plane has picked up speed
 		_mc_yaw_weight = 0.0f;
-		_mc_roll_weight = 0.0f;//1.0f-weight*2;
+		_mc_roll_weight = 1.0f-weight*2;
 		_mc_pitch_weight = 1.0f-weight;
 		PX4_INFO("weight=%.4f",(double)weight);
 		_v_att_sp->thrust =_thrust_transition_start+math::constrain((H-H*(weight*2-1.0f)*(weight*2-1.0f)),0.0f,H);//THROTTLE_TRANSITION_MAX*scale;
@@ -389,8 +391,8 @@ void Tailsitter::fill_actuator_outputs()
 		-_actuators_fw_in->control[actuator_controls_s::INDEX_ROLL]* (1 - _mc_roll_weight);
 		_actuators_out_1->control[actuator_controls_s::INDEX_PITCH] =
 			_actuators_mc_in->control[actuator_controls_s::INDEX_PITCH] * _mc_pitch_weight+
-			_actuators_fw_in->control[actuator_controls_s::INDEX_PITCH] *(1 - _mc_pitch_weight);
-		 //(_actuators_fw_in->control[actuator_controls_s::INDEX_PITCH] + _params->fw_pitch_trim) *(1 - _mc_pitch_weight);
+			//_actuators_fw_in->control[actuator_controls_s::INDEX_PITCH] *(1 - _mc_pitch_weight);
+			(_actuators_fw_in->control[actuator_controls_s::INDEX_PITCH] + _params_tailsitter.fw_pitch_trim) *(1 - _mc_pitch_weight);
 		_actuators_out_1->control[actuator_controls_s::INDEX_THROTTLE] =
 			_actuators_fw_in->control[actuator_controls_s::INDEX_THROTTLE];
 		break;

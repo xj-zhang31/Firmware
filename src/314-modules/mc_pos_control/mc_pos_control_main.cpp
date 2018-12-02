@@ -231,8 +231,8 @@ private:
 		(ParamFloat<px4::params::RC_FLT_SMP_RATE>) _rc_flt_smp_rate,
 		(ParamFloat<px4::params::MPC_ACC_HOR_ESTM>) _acc_max_estimator_xy,
 		//xj-zhang
-		(ParamFloat<px4::params::ZXJ_TRANS_KEEP>) _time_keep_p,
-		(ParamFloat<px4::params::ZXJ_WAST_MIN_THR>) _wastrans_min_thrust_p
+		(ParamFloat<px4::params::ZXJ_TRB_KEEP>) _time_keep_p,
+		(ParamFloat<px4::params::ZXJ_TRB_MIN_THR>) _wastrans_min_thrust_p
 
 	);
 

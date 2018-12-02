@@ -72,6 +72,7 @@ private:
 		float GROUND_SPEED2_TRANSITION_FRONT_P1;
 		float manual_pitch_max;
 		float manual_roll_max;
+		float trans_p2_dur;
 	} _params_tailsitter;
 
 	struct {
@@ -83,6 +84,7 @@ private:
 		param_t GROUND_SPEED2_TRANSITION_FRONT_P1;
 		param_t manual_pitch_max;
 		param_t manual_roll_max;
+		param_t trans_p2_dur;
 	} _params_handles_tailsitter;
 
 	enum vtol_mode {
