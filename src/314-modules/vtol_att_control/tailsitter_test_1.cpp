@@ -291,6 +291,7 @@ void Tailsitter::update_transition_state()
 		_pitch_transition_start_p2= euler.theta();
 		_v_att_sp->thrust = _mc_virtual_att_sp->thrust;
 		_thrust_transition_start=_v_att_sp->thrust;
+		_munual_thr_start=_manual->z;
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P2) {
 		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params_tailsitter.trans_p2_dur);
 		float H=_params_tailsitter.trans_thr_max-_thrust_transition_start;
@@ -332,6 +333,7 @@ void Tailsitter::update_transition_state()
 		// smoothly move control weight to MC
 		// smoothly move control weight to MC
 		_mc_roll_weight = _mc_pitch_weight = time_since_trans_start / _params->back_trans_duration*2;
+		_v_att_sp->thrust =_thrust_transition_start;
 	}
 
 	//xj-zhang
@@ -356,10 +358,10 @@ void Tailsitter::update_transition_state()
 
 	_v_att_sp->timestamp = hrt_absolute_time();
 	//加入手动控制量
-	_v_att_sp->pitch_body+=(-_manual->x)*_params_tailsitter.manual_pitch_max;
-	_v_att_sp->roll_body+=_manual->y*_params_tailsitter.manual_roll_max;
-	_v_att_sp->yaw_body+=_manual->r*_params_tailsitter.manual_yaw_max;
-	_v_att_sp->thrust +=_manual->z;
+	_v_att_sp->pitch_body+=-(_filter_manual_pitch.apply(_manual->x))*_params_tailsitter.manual_pitch_max/57.3f;
+	_v_att_sp->roll_body+=_filter_manual_roll.apply(_manual->y)*_params_tailsitter.manual_roll_max/57.3f;
+	_v_att_sp->yaw_body+=_filter_manual_yaw.apply(_manual->r)*_params_tailsitter.manual_yaw_max/57.3f;
+	_v_att_sp->thrust +=_manual->z-_munual_thr_start;
 	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,0.9f);
 	matrix::Quatf q_sp = matrix::Eulerf(_v_att_sp->roll_body, _v_att_sp->pitch_body, _v_att_sp->yaw_body);
 	q_sp.copyTo(_v_att_sp->q_d);

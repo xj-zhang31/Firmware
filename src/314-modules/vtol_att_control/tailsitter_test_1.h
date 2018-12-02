@@ -113,11 +113,15 @@ private:
 	float _thrust_transition_start; // throttle value when we start the front transition
 	float _yaw_transition;	// yaw angle in which transition will take place
 	float _pitch_transition_start;  // pitch angle at the start of transition (tailsitter)
+	float _munual_thr_start;
 	//xj-zhang
 	float _pitch_transition_start_p2{0.0f};// pitch angle at the start of transition P2 (tailsitter)
 	hrt_abstime _time_transition_start_p2{0};
 	hrt_abstime _time_transition_start_p3{0};
 	struct manual_control_setpoint_s *_manual;
+	math::LowPassFilter2p _filter_manual_pitch=math::LowPassFilter2p(50,10);
+	math::LowPassFilter2p _filter_manual_roll=math::LowPassFilter2p(50,10);
+	math::LowPassFilter2p _filter_manual_yaw=math::LowPassFilter2p(50,10);
 
 	/**
 	 * Update parameters.

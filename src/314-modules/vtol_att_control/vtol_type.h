@@ -46,6 +46,7 @@
 #include <lib/mathlib/mathlib.h>
 #include <drivers/drv_hrt.h>
 #include <drivers/drv_pwm_output.h>
+#include <controllib/blocks.hpp>//xj-zhang for low pass filter
 
 struct Params {
 	int32_t idle_pwm_mc;			// pwm value for idle in mc mode
