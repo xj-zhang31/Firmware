@@ -129,26 +129,71 @@ PARAM_DEFINE_FLOAT(ZXJ_TRANP1_GSPE, 16.0f);
  */
 PARAM_DEFINE_FLOAT(ZXJ_TRANP2_DUR, 2.0f);
 /**
- * manual control max pitch degree in rad during transintion
+ * transition P3 duration
  *
- *
+ * This parameter is the duration for tailsitter transition P2.
  *
  * @min 0
- * @max 1.57
+ * @max 10
  * @increment 0.01
  * @decimal 2
  * @group VTOL Attitude Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_MAN_PIT_MAX, 0.5f);
+PARAM_DEFINE_FLOAT(ZXJ_TRANP3_DUR, 2.0f);
 /**
- * manual control max roll degree in rad during transintion
+ * transition P3 pitch angle in degree
  *
- *
+ * This parameter is the pitch angle in tailsitter transition P2.
  *
  * @min 0
- * @max 1.57
+ * @max 15
  * @increment 0.01
  * @decimal 2
  * @group VTOL Attitude Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_MAN_ROL_MAX, 0.4f);
+PARAM_DEFINE_FLOAT(ZXJ_TRP3_F_PIT, 5.0f);
+/**
+ * manual control max pitch degree in deg during transintion
+ *
+ *
+ *
+ * @min 0
+ * @max 60
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_MAN_PIT_MAX, 30.0f);
+/**
+ * manual control max roll degree in deg during transintion
+ *
+ *
+ *
+ * @min 0
+ * @max 40
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_MAN_ROL_MAX, 20.0f);
+/**
+ * manual control max roll degree in deg during transintion
+ *
+ *
+ *
+ * @min 0
+ * @max 80
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_MAN_YAW_MAX, 40f);
+/**
+ *yaw control flag in transition mode
+ *
+ *
+ *
+ * @boolean
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_TRA_YAW_FLA, 1);

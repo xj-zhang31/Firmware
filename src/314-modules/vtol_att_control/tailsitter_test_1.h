@@ -72,7 +72,11 @@ private:
 		float GROUND_SPEED2_TRANSITION_FRONT_P1;
 		float manual_pitch_max;
 		float manual_roll_max;
+		float manual_yaw_max;
 		float trans_p2_dur;
+		float trans_p3_dur;
+		float trans_p3_f_pitch;
+		int32_t yaw_control_flag;
 	} _params_tailsitter;
 
 	struct {
@@ -84,14 +88,20 @@ private:
 		param_t GROUND_SPEED2_TRANSITION_FRONT_P1;
 		param_t manual_pitch_max;
 		param_t manual_roll_max;
+		param_t manual_yaw_max;
 		param_t trans_p2_dur;
+		param_t trans_p3_dur;
+		param_t trans_p3_f_pitch;
+		param_t yaw_control_flag;
 	} _params_handles_tailsitter;
 
 	enum vtol_mode {
 		MC_MODE = 0,			/**< vtol is in multicopter mode */
 		TRANSITION_FRONT_P1,	/**< vtol is in front transition part 1 mode *///xj-zhang
 		TRANSITION_FRONT_P2,	/**<vtol is in front transition part 2mode */
+		TRANSITION_FRONT_P3,
 		TRANSITION_BACK,		/**< vtol is in back transition mode part 1*/
+		TRANSITION_BACK_P3,
 		FW_MODE					/**< vtol is in fixed wing mode */
 	};
 
@@ -106,6 +116,7 @@ private:
 	//xj-zhang
 	float _pitch_transition_start_p2{0.0f};// pitch angle at the start of transition P2 (tailsitter)
 	hrt_abstime _time_transition_start_p2{0};
+	hrt_abstime _time_transition_start_p3{0};
 	struct manual_control_setpoint_s *_manual;
 
 	/**

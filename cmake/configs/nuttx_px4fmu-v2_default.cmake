@@ -121,11 +121,11 @@ set(config_module_list
 	# Vehicle Control
 	#
 	314-modules/fw_att_control
-	314-modules/fw_pos_control_l1
+	modules/fw_pos_control_l1
 	#modules/gnd_att_control
 	#modules/gnd_pos_control
 	modules/mc_att_control
-	314-modules/mc_pos_control
+	modules/mc_pos_control
 	314-modules/vtol_att_control
 
 	#
