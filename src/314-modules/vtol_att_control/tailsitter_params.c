@@ -72,7 +72,7 @@ PARAM_DEFINE_INT32(VT_FW_MOT_OFFID, 0);
  * @decimal 1
  * @group VTOL Attitude Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_TRAN_THR_MIN, 0.4);
+PARAM_DEFINE_FLOAT(ZXJ_TRAN_THR_MIN, 0.3);
 /**
  * The max thrust setpoint in transition ,tailsitter
  *
@@ -127,7 +127,19 @@ PARAM_DEFINE_FLOAT(ZXJ_TRANP1_GSPE, 16.0f);
  * @decimal 2
  * @group VTOL Attitude Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_TRANP2_DUR, 2.0f);
+PARAM_DEFINE_FLOAT(ZXJ_TRA_F_P2_DUR, 2.0f);
+/**
+ * transition P2 duration
+ *
+ * This parameter is the duration for tailsitter transition P2.
+ *
+ * @min 0
+ * @max 10
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_TRA_B_P2_DUR, 1.0f);
 /**
  * transition P3 duration
  *
@@ -139,7 +151,7 @@ PARAM_DEFINE_FLOAT(ZXJ_TRANP2_DUR, 2.0f);
  * @decimal 2
  * @group VTOL Attitude Control
  */
-PARAM_DEFINE_FLOAT(ZXJ_TRANP3_DUR, 2.0f);
+PARAM_DEFINE_FLOAT(ZXJ_TRAN_P3_DUR, 1.0f);
 /**
  * transition P3 pitch angle in degree
  *
@@ -188,6 +200,18 @@ PARAM_DEFINE_FLOAT(ZXJ_MAN_ROL_MAX, 20.0f);
  * @group VTOL Attitude Control
  */
 PARAM_DEFINE_FLOAT(ZXJ_MAN_YAW_MAX, 40f);
+/**
+ * height feedback to thrust P controller param
+ *
+ *
+ *
+ * @min 0
+ * @max 1
+ * @increment 0.01
+ * @decimal 2
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_FLOAT(ZXJ_THR_HEI_P, 0.5f);
 /**
  *yaw control flag in transition mode
  *

@@ -73,10 +73,12 @@ Tailsitter::Tailsitter(VtolAttitudeControl *attc) :
 	_params_handles_tailsitter.manual_pitch_max=param_find("ZXJ_MAN_PIT_MAX");
 	_params_handles_tailsitter.manual_roll_max=param_find("ZXJ_MAN_ROL_MAX");
 	_params_handles_tailsitter.manual_yaw_max=param_find("ZXJ_MAN_YAW_MAX");
-	_params_handles_tailsitter.trans_p2_dur=param_find("ZXJ_TRANP2_DUR");
-	_params_handles_tailsitter.trans_p3_dur=param_find("ZXJ_TRANP3_DUR");
+	_params_handles_tailsitter.trans_f_p2_dur=param_find("ZXJ_TRA_F_P2_DUR");
+	_params_handles_tailsitter.trans_b_p2_dur=param_find("ZXJ_TRA_B_P2_DUR");
+	_params_handles_tailsitter.trans_p3_dur=param_find("ZXJ_TRAN_P3_DUR");
 	_params_handles_tailsitter.trans_p3_f_pitch=param_find("ZXJ_TRP3_F_PIT");
 	_params_handles_tailsitter.yaw_control_flag=param_find("ZXJ_TRA_YAW_FLA");
+	_params_handles_tailsitter.height_p=param_find("ZXJ_THR_HEI_P");
 	_manual=_attc->get_manual_control_sp();
 }
 
@@ -103,14 +105,18 @@ Tailsitter::parameters_update()
 	_params_tailsitter.manual_roll_max = v;
 	param_get(_params_handles_tailsitter.manual_yaw_max, &v);
 	_params_tailsitter.manual_yaw_max = v;
-	param_get(_params_handles_tailsitter.trans_p2_dur, &v);
-	_params_tailsitter.trans_p2_dur = v;
+	param_get(_params_handles_tailsitter.trans_f_p2_dur, &v);
+	_params_tailsitter.trans_f_p2_dur = v;
+	param_get(_params_handles_tailsitter.trans_b_p2_dur, &v);
+	_params_tailsitter.trans_b_p2_dur = v;
 	param_get(_params_handles_tailsitter.trans_p3_dur, &v);
 	_params_tailsitter.trans_p3_dur = v;
 	param_get(_params_handles_tailsitter.trans_p3_f_pitch, &v);
 	_params_tailsitter.trans_p3_f_pitch = v;
 	param_get(_params_handles_tailsitter.yaw_control_flag, &v2);
 	_params_tailsitter.yaw_control_flag= (v2==1);
+	param_get(_params_handles_tailsitter.height_p, &v);
+	_params_tailsitter.height_p = v;
 }
 
 void Tailsitter::update_vtol_state()
@@ -290,6 +296,7 @@ void Tailsitter::update_transition_state()
 		//transition should start from current attitude instead of current setpoint
 		_pitch_transition_start = euler.theta();
 		_thrust_transition_start = _v_att_sp->thrust;
+		_z_start=_local_pos->z;
 		_flag_was_in_trans_mode = true;
 	}
 	//xj-zhang
@@ -308,7 +315,7 @@ void Tailsitter::update_transition_state()
 		_thrust_transition_start=_v_att_sp->thrust;
 		_munual_thr_start=_manual->z;
 	}else if (_vtol_schedule.flight_mode == TRANSITION_FRONT_P2) {
-		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params_tailsitter.trans_p2_dur);
+		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ (_params_tailsitter.trans_f_p2_dur);
 		float H=_params_tailsitter.trans_thr_max-_thrust_transition_start;
 		float weight=fabsf((euler.theta()-_pitch_transition_start_p2)/(PITCH_TRANSITION_FRONT_P2 - _pitch_transition_start_p2));
 		// create time dependant pitch angle set point + 0.2 rad overlap over the switch value
@@ -344,7 +351,7 @@ void Tailsitter::update_transition_state()
 		_pitch_transition_start_p2= euler.theta();
 	}
 	else if (_vtol_schedule.flight_mode == TRANSITION_BACK_P2) {
-		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/ _params->back_trans_duration;
+		float scale=(hrt_absolute_time()-_time_transition_start_p2)*1e-6f/_params_tailsitter.trans_b_p2_dur;
 		if (!flag_idle_mc) {
 			flag_idle_mc = set_idle_mc();
 		}
@@ -388,7 +395,7 @@ void Tailsitter::update_transition_state()
 	_v_att_sp->pitch_body+=-(_filter_manual_pitch.apply(_manual->x))*_params_tailsitter.manual_pitch_max/57.3f;
 	_v_att_sp->roll_body+=_filter_manual_roll.apply(_manual->y)*_params_tailsitter.manual_roll_max/57.3f;
 	_v_att_sp->yaw_body+=_filter_manual_yaw.apply(_manual->r)*_params_tailsitter.manual_yaw_max/57.3f;
-	_v_att_sp->thrust +=_manual->z-_munual_thr_start;
+	_v_att_sp->thrust +=_manual->z-_munual_thr_start+_params_tailsitter.height_p*(float)atan(_local_pos->z-_z_start)/1.57f;
 	_v_att_sp->thrust = math::constrain(_v_att_sp->thrust,_params_tailsitter.trans_thr_min,0.9f);
 	matrix::Quatf q_sp = matrix::Eulerf(_v_att_sp->roll_body, _v_att_sp->pitch_body, _v_att_sp->yaw_body);
 	q_sp.copyTo(_v_att_sp->q_d);

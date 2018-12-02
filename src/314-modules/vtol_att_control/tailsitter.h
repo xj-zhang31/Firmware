@@ -72,10 +72,12 @@ private:
 		float manual_pitch_max;
 		float manual_roll_max;
 		float manual_yaw_max;
-		float trans_p2_dur;
+		float trans_f_p2_dur;
+		float trans_b_p2_dur;
 		float trans_p3_dur;
 		float trans_p3_f_pitch;
 		bool yaw_control_flag;
+		float height_p;
 	} _params_tailsitter;
 
 	struct {
@@ -87,10 +89,12 @@ private:
 		param_t manual_pitch_max;
 		param_t manual_roll_max;
 		param_t manual_yaw_max;
-		param_t trans_p2_dur;
+		param_t trans_f_p2_dur;
+		param_t trans_b_p2_dur;
 		param_t trans_p3_dur;
 		param_t trans_p3_f_pitch;
 		param_t yaw_control_flag;
+		param_t height_p;
 	} _params_handles_tailsitter;
 
 	enum vtol_mode {
@@ -113,6 +117,7 @@ private:
 	float _yaw_transition;	// yaw angle in which transition will take place
 	float _pitch_transition_start;  // pitch angle at the start of transition (tailsitter)
 	float _munual_thr_start;
+	float _z_start;
 	//xj-zhang
 	float _pitch_transition_start_p2{0.0f};// pitch angle at the start of transition P2 (tailsitter)
 	hrt_abstime _time_transition_start_p2{0};
